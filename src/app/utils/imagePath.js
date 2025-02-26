@@ -1,22 +1,18 @@
 /**
- * Utility function to get the correct image path for both development and production
- * Handles the basePath prefix needed for GitHub Pages deployment
+ * Get the correct path for images in both development and production
+ * Using the static GitHub Pages URL for production
  */
 export function getImagePath(path) {
-  // Extract repository name from package.json homepage or use a default
-  // For dharc-x-dhlab-seminars.github.io, we don't need a basePath
-  // For other repos, we need the repo name as basePath
+  // Remove any leading slash to avoid double slashes
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
   
-  // Check if we're in production and if we need a basePath
-  // If the site is deployed to username.github.io (no repo name in URL), no basePath is needed
-  const isGitHubPages = process.env.NODE_ENV === 'production';
+  // In development, use the path as is
+  // In production, use the full GitHub Pages URL
+  if (process.env.NODE_ENV === 'production') {
+    // Replace with your actual GitHub Pages URL
+    return `https://dharc-x-dhlab-seminars.github.io/${cleanPath}`;
+  }
   
-  // No basePath needed for custom domains or username.github.io sites
-  // You can hardcode your repo name here if needed
-  const basePath = isGitHubPages ? '' : '';
-  
-  // Ensure path starts with a slash and doesn't duplicate slashes
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  
-  return `${basePath}${normalizedPath}`;
+  // For local development
+  return `/${cleanPath}`;
 } 
