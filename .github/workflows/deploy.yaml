@@ -42,18 +42,40 @@ jobs:
           fi
           # Create .nojekyll file to prevent Jekyll processing
           touch public/.nojekyll
+          # Also create .nojekyll in out directory after build
+          mkdir -p out
+          touch out/.nojekyll
+      - name: Update next.config.mjs for proper image paths
+        run: |
+          # Add proper base path if needed
+          REPO_NAME=$(echo "$GITHUB_REPOSITORY" | cut -d'/' -f2)
+          if [[ "$GITHUB_REPOSITORY_OWNER" != *".github.io"* && "$REPO_NAME" != *".github.io"* ]]; then
+            # Only set basePath if it's not already set
+            if ! grep -q "basePath:" next.config.mjs; then
+              sed -i "s|// basePath: '/repo-name',|basePath: '/$REPO_NAME',|g" next.config.mjs
+            fi
+            echo "Set basePath to /$REPO_NAME"
+            cat next.config.mjs
+          fi
       - name: Build with Next.js
         run: |
-          # Force a full rebuid with clean cache
+          # Force a full rebuild with clean cache
           npm run build -- --no-cache
         env:
           # Set NODE_ENV to production to ensure proper CSS processing
           NODE_ENV: production
-      - name: Check build output
+      - name: Copy image assets if needed
         run: |
+          # Ensure images directory exists in output
+          if [ -d "public/images" ]; then
+            mkdir -p out/images
+            cp -r public/images/* out/images/ || echo "No images to copy"
+          fi
           # List the output directory to verify assets
+          echo "Output directory contents:"
           ls -la ./out
-          ls -la ./out/_next || echo "No _next directory found"
+          echo "Image directory contents (if exists):"
+          ls -la ./out/images || echo "No images directory found"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
