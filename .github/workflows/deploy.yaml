@@ -28,9 +28,32 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci
+          # Ensure Tailwind CSS and PostCSS are installed
+          npm install -D tailwindcss postcss autoprefixer
+          # Ensure Font Awesome is installed
+          npm install font-awesome
+      - name: Verify CSS configuration
+        run: |
+          # Check if tailwind config exists, if not create it
+          if [ ! -f tailwind.config.mjs ]; then
+            npx tailwindcss init -p
+          fi
+          # Create .nojekyll file to prevent Jekyll processing
+          touch public/.nojekyll
       - name: Build with Next.js
-        run: npm run build
+        run: |
+          # Force a full rebuid with clean cache
+          npm run build -- --no-cache
+        env:
+          # Set NODE_ENV to production to ensure proper CSS processing
+          NODE_ENV: production
+      - name: Check build output
+        run: |
+          # List the output directory to verify assets
+          ls -la ./out
+          ls -la ./out/_next || echo "No _next directory found"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
